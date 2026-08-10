@@ -1,12 +1,13 @@
 use std::convert::TryInto;
 use std::fs::{self, DirBuilder};
-use std::io::{Write, Read};
 use std::path::Path;
+use std::io::Write;
 use yaml_rust::{YamlLoader,Yaml};
 
 use rarezip::bk;
 
 pub mod asset;
+pub mod level_setup;
 
 #[derive(Clone, Copy)]
 struct AssetMeta{
@@ -20,7 +21,7 @@ impl AssetMeta {
         let offset = u32::from_be_bytes([in_bytes[0], in_bytes[1], in_bytes[2], in_bytes[3]]);
         let c_flag = u16::from_be_bytes([in_bytes[4], in_bytes[5]]);
         let t_flag = u16::from_be_bytes([in_bytes[6], in_bytes[7]]);
-        return AssetMeta{offset: offset as usize, c_flag: c_flag != 0, t_flag: t_flag}
+        return AssetMeta{offset: offset as usize, c_flag: c_flag != 0, t_flag}
     }
 
     pub fn to_bytes(&self) -> Vec<u8>{
@@ -178,13 +179,13 @@ impl AssetFolder{
             let mut tmp_str2: String;
             let file_ext = match data.get_type(){
                 asset::AssetType::Binary => ".bin",
-                asset::AssetType::Dialog => ".dialog",
-                asset::AssetType::GruntyQuestion => ".grunty_q",
-                asset::AssetType::QuizQuestion => ".quiz_q",
+                asset::AssetType::Dialog => ".dialog.yaml",
+                asset::AssetType::GruntyQuestion => ".grunty_q.yaml",
+                asset::AssetType::QuizQuestion => ".quiz_q.yaml",
                 asset::AssetType::DemoInput => ".demo",
                 asset::AssetType::Midi => ".midi.bin",
                 asset::AssetType::Model => ".model.bin",
-                asset::AssetType::LevelSetup => ".lvl_setup.bin",
+                asset::AssetType::LevelSetup => ".lvl_setup.yaml",
                 asset::AssetType::Animation => ".anim.bin",
                 asset::AssetType::Sprite(fmt) => {tmp_str2 = format!(".sprite.{:?}.bin",fmt).to_lowercase(); &tmp_str2.as_str()},
                 _ => ".bin"
@@ -256,7 +257,7 @@ impl AssetFolder{
                 "DemoInput"         => Some(Box::new(asset::DemoButtonFile::read(&containing_folder.join(relative_path)))),
                 // "Midi"              => Some(Box::new(asset::MidiSeqFile::read(&containing_folder.join(relative_path)))),
                 // "Model"             => Some(Box::new(asset::Model::read(&containing_folder.join(relative_path)))),
-                // "LevelSetup"        => Some(Box::new(asset::LevelSetup::read(&containing_folder.join(relative_path)))),
+                "LevelSetup"        => Some(Box::new(level_setup::LevelSetup::read(&containing_folder.join(relative_path)))),
                 // "Animation"         => Some(Box::new(asset::Animation::read(&containing_folder.join(relative_path)))),
                 // x if x.starts_with("Sprite_") => Some(Box::new(asset::Sprite::read(&containing_folder.join(relative_path)))),
                 _ => Some(Box::new(asset::Binary::read(&containing_folder.join(relative_path)))),

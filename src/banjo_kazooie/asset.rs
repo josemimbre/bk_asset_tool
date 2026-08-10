@@ -1,11 +1,13 @@
 use std::fs::{self, File, DirBuilder};
-use std::io::{Write, Read, BufWriter};
+use std::io::{Write, BufWriter};
 use std::path::Path;
 use yaml_rust::{Yaml, YamlLoader};
 use png;
 
-pub fn from_seg_indx_and_bytes(segment :usize, i :usize, in_bytes: &[u8]) -> Box<dyn Asset>{
-    return match segment{
+use super::level_setup::LevelSetup;
+
+pub fn from_seg_indx_and_bytes(segment :usize, i: usize, in_bytes: &[u8]) -> Box<dyn Asset>{
+    match segment{
         0 => Box::new(Animation::from_bytes(in_bytes)),
         1 | 3 => match in_bytes { //models and sprites
             [0x00, 0x00, 0x00, 0x0B, ..] => Box::new(Model::from_bytes(in_bytes)),
@@ -502,42 +504,6 @@ impl Asset for MidiSeqFile{
 
     fn get_type(&self)->AssetType{
         return AssetType::Midi;
-    }
-
-    fn write(&self, path: &Path){
-        let mut bin_file = File::create(path).unwrap();
-        bin_file.write_all(&self.bytes).unwrap();
-    }
-}
-
-/// LevelSetup TODO !!!!!!!!!
-///     - struct members
-///     - from_bytes
-///     - read
-///     - to_bytes
-///     - write
-
-pub struct LevelSetup{
-    bytes: Vec<u8>,
-}
-
-impl LevelSetup{
-    pub fn from_bytes(in_bytes: &[u8])->LevelSetup{
-        LevelSetup{bytes: in_bytes.to_vec()}
-    }
-
-    pub fn read(path: &Path) -> LevelSetup{
-        LevelSetup{bytes: fs::read(path).unwrap()}
-    }
-}
-
-impl Asset for LevelSetup{
-    fn to_bytes(&self)->Vec<u8>{
-        return self.bytes.clone();
-    }
-
-    fn get_type(&self)->AssetType{
-        return AssetType::LevelSetup;
     }
 
     fn write(&self, path: &Path){
